@@ -1,0 +1,23 @@
+version: '3'
+services:
+  front:
+    build: ./front
+    volumes:
+    - ./front/src:/usr/src/app
+    command: sh -c "cd react-sample && yarn start"
+    ports:
+      - "3000:3000"
+    stdin_open: true
+
+  back:
+    build: ./back
+    volumes:
+      - ./back/src:/usr/src/app/src
+
+    ports:
+      - "8000:8000"
+
+    command: sh -c "cd src && uvicorn main:app --reload --host 0.0.0.0"
+
+
+
