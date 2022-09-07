@@ -9,15 +9,45 @@ services:
       - "3000:3000"
     stdin_open: true
 
+  mysql_db:
+    image: mysql:8
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    # volumes:
+    #   - db_volume:/var/lib/mysql
+    environment: # Set up mysql database name and password
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: employees
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    networks:
+      - app-tier
+
   back:
     build: ./back
     volumes:
       - ./back/src:/usr/src/app/src
-
+    depends_on:
+      - mysql_db
+    networks:
+      - app-tier
     ports:
       - "8000:8000"
 
     command: sh -c "cd src && uvicorn main:app --reload --host 0.0.0.0"
+
+  reverse-proxy:
+    build: ./reverse-proxy
+    depends_on:
+      - front
+      - back
+    ports:
+      - 80:80
+
+
+networks:
+  app-tier:
+    driver: bridge
+
 
 
 
