@@ -1,0 +1,10 @@
+opneapi: 3.0.0
+info:
+  title: back
+  version : 0.0.0
+
+servers:
+  - url: http://examplp.com/api/
+
+paths:
+
