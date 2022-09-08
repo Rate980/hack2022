@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-host = "mysql_db:3308"
+host = "mysql_db"
 db_name = "employees"
 user = "user"
 password = "password"
