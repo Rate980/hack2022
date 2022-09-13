@@ -18,6 +18,9 @@ class TestUser(BaseModel):
     name: str
     point: int
 
+    class Config:
+        orm_mode = True
+
 
 def main() -> None:
     # テーブル構築

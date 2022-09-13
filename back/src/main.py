@@ -10,14 +10,15 @@ from model import TestUser, TestUserTable
 app = FastAPI()
 
 
-@app.get("/")
-def root() -> dict[str, str]:
-    return {"message": "Hello World"}
+@app.get("/ping")
+def root() -> str:
+    return "pong"
 
 
 @app.get("/users", response_model=list[TestUser])
-def users() -> list[TestUserTable]:
+def users() -> list[TestUser]:
     users = session.query(TestUserTable).all()
+    # return [TestUser.from_orm(x) for x in users]
     return users
 
 
@@ -25,8 +26,8 @@ class UserData(BaseModel):
     name: str
 
 
-@app.post("/users", response_model=TestUser)
-def create_user(user: UserData) -> TestUserTable:
+@app.post("/users", status_code=201, response_model=TestUser)
+def create_user(user: UserData) -> TestUser:
     check = session.query(TestUserTable).filter(TestUserTable.name == user.name).first()
     if check is not None:
         raise HTTPException(status_code=401, detail="user name")
@@ -42,10 +43,11 @@ def create_user(user: UserData) -> TestUserTable:
 
 
 @app.get("/users/{user_name}", response_model=TestUser)
-def get_user(user_name: str) -> TestUserTable:
+def get_user(user_name: str) -> TestUser:
     user = session.query(TestUserTable).filter(TestUserTable.name == user_name).first()
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
+
     return user
 
 
@@ -54,12 +56,10 @@ class PatchUser(BaseModel):
 
 
 @app.patch("/users/{user_name}", response_model=TestUser)
-def edit_user(user_name: str, user_data: PatchUser) -> TestUserTable:
-    query = session.query(TestUserTable).filter(TestUserTable.name == user_name)
-    user = query.first()
+def edit_user(user_name: str, user_data: PatchUser) -> TestUser:
+    user = session.query(TestUserTable).filter(TestUserTable.name == user_name).first()
     user.point = user_data.point
     session.commit()
-    user = query.first()
     return user
 
 
