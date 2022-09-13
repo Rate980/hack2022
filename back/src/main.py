@@ -1,6 +1,4 @@
 import re
-from audioop import add
-from typing import Any, Optional
 
 from fastapi import FastAPI, Response
 from pydantic import BaseModel
@@ -13,12 +11,12 @@ app = FastAPI()
 
 
 @app.get("/")
-def root() -> Any:
+def root() -> dict[str, str]:
     return {"message": "Hello World"}
 
 
-@app.get("/users")
-def users() -> Any:
+@app.get("/users", response_model=list[TestUser])
+def users() -> list[TestUserTable]:
     users = session.query(TestUserTable).all()
     return users
 
@@ -27,8 +25,8 @@ class UserData(BaseModel):
     name: str
 
 
-@app.post("/users")
-def create_user(user: UserData) -> Any:
+@app.post("/users", response_model=TestUser)
+def create_user(user: UserData) -> TestUserTable:
     check = session.query(TestUserTable).filter(TestUserTable.name == user.name).first()
     if check is not None:
         raise HTTPException(status_code=401, detail="user name")
@@ -43,8 +41,8 @@ def create_user(user: UserData) -> Any:
     return add_user
 
 
-@app.get("/users/{user_name}")
-def get_user(user_name: str) -> Any:
+@app.get("/users/{user_name}", response_model=TestUser)
+def get_user(user_name: str) -> TestUserTable:
     user = session.query(TestUserTable).filter(TestUserTable.name == user_name).first()
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
@@ -55,16 +53,21 @@ class PatchUser(BaseModel):
     point: int
 
 
-@app.patch("/users/{user_name}")
-def edit_user(user_name: str, user_data: PatchUser) -> Any:
-    user = session.query(TestUserTable).filter(TestUserTable.name == user_name)
+@app.patch("/users/{user_name}", response_model=TestUser)
+def edit_user(user_name: str, user_data: PatchUser) -> TestUserTable:
+    query = session.query(TestUserTable).filter(TestUserTable.name == user_name)
+    user = query.first()
     user.point = user_data.point
     session.commit()
-    return None
+    user = query.first()
+    return user
 
 
-@app.delete("/users/{user_name}")
-def delete_user(user_name: str) -> Any:
+@app.delete("/users/{user_name}", response_model=TestUser)
+def delete_user(user_name: str) -> Response:
     user = session.query(TestUserTable).filter(TestUserTable.name == user_name).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="user not found")
     session.delete(user)
+    session.commit()
     return Response(status_code=204)
